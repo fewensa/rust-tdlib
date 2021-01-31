@@ -9,7 +9,11 @@ async fn main() {
     let tdlib_parameters = TdlibParameters::builder()
         .database_directory("tdlib")
         .use_test_dc(false)
-        .api_id(env!("API_ID").parse::<i64>().unwrap())
+        .api_id(env!("API_ID").parse::<i32>().unwrap())
+        .system_language_code("en")
+        .device_model("Desktop")
+        .system_version("Unknown")
+        .application_version(env!("CARGO_PKG_VERSION"))
         .api_hash(env!("API_HASH"))
         .enable_storage_optimizer(true)
         .build();

@@ -373,7 +373,7 @@ where
     // It's the base routine: sends received updates to particular handlers: observer and auth_state handler
     pub(crate) fn init_updates_task(
         &self,
-        mut auth_sx: mpsc::Sender<UpdateAuthorizationState>,
+        auth_sx: mpsc::Sender<UpdateAuthorizationState>,
     ) -> JoinHandle<RTDResult<()>> {
         let api = self.api.clone();
         let stop_flag = self.stop_flag.clone();
@@ -622,4 +622,3 @@ mod tests {
             .unwrap();
     }
 }
-
