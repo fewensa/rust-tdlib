@@ -18,7 +18,8 @@ async fn main() {
         .enable_storage_optimizer(true)
         .build();
     let mut client = Client::builder()
-        .with_tdlib_verbosity_level(0)
+        .with_tdlib_verbosity_level(env!("TD_LOG_LEVEL").parse().unwrap())
+        .with_tdlib_log_file_path("log")
         .with_tdlib_parameters(tdlib_parameters)
         .build()
         .unwrap();

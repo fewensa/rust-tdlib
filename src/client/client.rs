@@ -381,11 +381,17 @@ where
         let recv_timeout = self.read_updates_timeout;
 
         tokio::spawn(async move {
+            trace!("updates handler started");
             let current = tokio::runtime::Handle::try_current().unwrap();
             while !stop_flag.load(Ordering::Acquire) {
                 let rec_api = api.raw_api().clone();
                 if let Some(json) = current
-                    .spawn_blocking(move || rec_api.receive(recv_timeout))
+                    .spawn_blocking(move || {
+                        trace!("waiting for new updates");
+                        let u = rec_api.receive(recv_timeout);
+                        trace!("updates received");
+                        u
+                    })
                     .await
                     .unwrap()
                 {
