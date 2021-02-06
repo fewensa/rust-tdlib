@@ -5,7 +5,7 @@ use rust_tdlib::{types::*, client::{Client, Worker}, tdjson};
 
 #[tokio::main]
 async fn main() {
-    tdjson::set_log_verbosity_level(4);
+    tdjson::set_log_verbosity_level(2);
     env_logger::init();
     let tdlib_parameters = TdlibParameters::builder()
         .database_directory("tdlib")
@@ -19,7 +19,7 @@ async fn main() {
         .enable_storage_optimizer(true)
         .build();
     let client = Client::builder()
-        .with_tdlib_parameters(tdlib_parameters)
+        .with_tdlib_parameters(tdlib_parameters.clone())
         .build()
         .unwrap();
 

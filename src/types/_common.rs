@@ -26,7 +26,7 @@ macro_rules! rtd_enum_deserialize {
           Some(s) => s,
           None => return Err(D::Error::unknown_field(stringify!("{} -> @type", $field), &[stringify!("{} -> @type is not the correct type", $type_name)])) // &format!("{} -> @type is not the correct type", stringify!($field))[..]
         },
-        None => return Err(D::Error::missing_field(stringify!("{} -> @type", $field)))
+        None => return Err(D::Error::custom("@type is empty"))
       };
 
       let obj = match rtd_trait_type {
@@ -36,7 +36,7 @@ macro_rules! rtd_enum_deserialize {
             Err(_e) => return Err(D::Error::custom(format!("{} can't deserialize to {}::{}: {}", stringify!($td_name), stringify!($type_name), stringify!($enum_item), _e)))
           }),
         )*
-        _ => return Err(D::Error::missing_field(stringify!($field)))
+        _ => return Err(D::Error::custom(format!("got {} @type with unavailable variant", rtd_trait_type)))
       };
       Ok(obj)
     }
@@ -1359,35 +1359,6 @@ impl TdType {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::types::{from_json, TdType, UpdateAuthorizationState};
-
-    #[test]
-    fn test_deserialize_enum() {
-        match from_json::<UpdateAuthorizationState>(
-            r#"{"@type":"updateAuthorizationState","authorization_state":{"@type":"authorizationStateWaitTdlibParameters"}}"#,
-        ) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("{}", e)
-            }
-        };
-
-        match from_json::<TdType>(
-            r#"{"@type":"updateAuthorizationState","authorization_state":{"@type":"authorizationStateWaitTdlibParameters"}}"#,
-        ) {
-            Ok(t) => match t {
-                TdType::UpdateAuthorizationState(_) => {}
-                _ => panic!("from_json failed: {:?}", t),
-            },
-            Err(e) => {
-                panic!("{}", e)
-            }
-        };
-    }
-}
-
 pub(super) fn number_from_string<'de, T, D>(deserializer: D) -> Result<T, D::Error>
 where
     T: FromStr,
@@ -1411,4 +1382,58 @@ where
         }
     }
     Ok(r)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::types::{from_json, TdType, UpdateAuthorizationState, JsonValue};
+
+    #[test]
+    fn test_deserialize_enum() {
+        match from_json::<UpdateAuthorizationState>(
+            r#"{"@type":"updateAuthorizationState","authorization_state":{"@type":"authorizationStateWaitTdlibParameters"}}"#,
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                panic!("{}", e)
+            }
+        };
+
+        match from_json::<TdType>(
+            r#"{"@type":"updateAuthorizationState","authorization_state":{"@type":"authorizationStateWaitTdlibParameters"}}"#,
+        ) {
+            Ok(t) => match t {
+                TdType::UpdateAuthorizationState(_) => {}
+                _ => panic!("from_json failed: {:?}", t),
+            },
+            Err(e) => {
+                panic!("{}", e)
+            }
+        };
+
+        match from_json::<JsonValue> (
+            r#"{"@type":"jsonValueObject","members":[{"@type":"jsonObjectMember","key":"emojies_animated_zoom","value":{"@type":"jsonValueNumber","value":0.625000}},{"@type":"jsonObjectMember","key":"youtube_pip","value":{"@type":"jsonValueString","value":"inapp"}},{"@type":"jsonObjectMember","key":"qr_login_camera","value":{"@type":"jsonValueBoolean","value":false}},{"@type":"jsonObjectMember","key":"qr_login_code","value":{"@type":"jsonValueString","value":"disabled"}}],"@extra":"a26563e1-114b-45d3-abb5-08c541a3bdb3","@client_id":1}"#,
+        ) {
+            Ok(t) => match t {
+                JsonValue::Object(o) => {}
+                _ => panic!("got invalid enum")
+            },
+            Err(e) => panic!("{}", e)
+        };
+
+        match from_json::<TdType>(
+            r#"{"@type":"jsonValueObject","members":[{"@type":"jsonObjectMember","key":"emojies_animated_zoom","value":{"@type":"jsonValueNumber","value":0.625000}},{"@type":"jsonObjectMember","key":"youtube_pip","value":{"@type":"jsonValueString","value":"inapp"}},{"@type":"jsonObjectMember","key":"qr_login_camera","value":{"@type":"jsonValueBoolean","value":false}},{"@type":"jsonObjectMember","key":"qr_login_code","value":{"@type":"jsonValueString","value":"disabled"}}],"@extra":"a26563e1-114b-45d3-abb5-08c541a3bdb3","@client_id":1}"#,
+        ) {
+            Ok(t) => match t {
+                TdType::JsonValue(j) => match j {
+                    JsonValue::Object(o) => {}
+                    _ => panic!("from_json failed: {:?}", j)
+                },
+                _ => panic!("from_json failed: {:?}", t)
+            },
+            Err(e) => {
+                 panic!("{}", e)
+             }
+        };
+    }
 }
